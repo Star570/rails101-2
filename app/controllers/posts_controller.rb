@@ -1,5 +1,6 @@
 class PostsController < ApplicationController
 	before_filter :authenticate_user!, :only => [:new, :create]
+	before_action :find_post_and_check_permission, :only =>[:edit, :update, :destroy]
 
 	def new
 		@group = Group.find(params[:group_id])
@@ -18,7 +19,30 @@ class PostsController < ApplicationController
 		end
 	end
 
+	def edit
+	end
+
+	def update
+		if @post.update(post_params)
+			redirect_to account_posts_path, notice: "Update success"
+		else
+			render :edit
+		end
+	end
+
+	def destroy
+		@post.destroy
+		redirect_to account_posts_path, alert: "Post deleted"
+	end
+
 	private
+	def find_post_and_check_permission
+		@group = Group.find(params[:group_id])
+		@post = Post.find(params[:id])
+		if current_user != @post.user
+			redirect_to root_path, alert: "You have no permision."
+		end
+	end
 
 	def post_params
 		params.require(:post).permit(:content)
